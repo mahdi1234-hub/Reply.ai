@@ -5,7 +5,7 @@ const secret = new TextEncoder().encode(
   process.env.JWT_SECRET || "reply-ai-default-secret"
 );
 
-const publicPaths = ["/auth", "/api/auth/send-otp", "/api/auth/verify-otp"];
+const publicPaths = ["/auth", "/api/auth/send-otp", "/api/auth/verify-otp", "/api/auth/session"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
