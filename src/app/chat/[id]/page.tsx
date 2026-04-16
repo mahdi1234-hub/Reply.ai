@@ -17,7 +17,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   RotateCcw,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -170,6 +173,71 @@ function MessageActions({
     </motion.div>
   );
 }
+
+/* Collapsible table: shows 5 rows by default, with Show more / Show less */
+const MAX_VISIBLE_ROWS = 5;
+
+function CollapsibleTable({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [totalRows, setTotalRows] = useState(0);
+
+  useEffect(() => {
+    if (tableRef.current) {
+      const tbody = tableRef.current.querySelector("tbody");
+      if (tbody) {
+        setTotalRows(tbody.children.length);
+      } else {
+        // count all tr except those inside thead
+        const allRows = tableRef.current.querySelectorAll("tr");
+        const theadRows = tableRef.current.querySelectorAll("thead tr");
+        setTotalRows(allRows.length - theadRows.length);
+      }
+    }
+  }, [children]);
+
+  const needsCollapse = totalRows > MAX_VISIBLE_ROWS;
+
+  return (
+    <div className="relative">
+      <div
+        className={needsCollapse && !expanded ? "max-h-[220px] overflow-hidden" : ""}
+      >
+        <table ref={tableRef}>{children}</table>
+      </div>
+      {needsCollapse && !expanded && (
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-gray-100 to-transparent pointer-events-none" />
+      )}
+      {needsCollapse && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 mt-1 font-medium transition-colors"
+        >
+          {expanded ? (
+            <>
+              <ChevronUp size={14} />
+              Show less
+            </>
+          ) : (
+            <>
+              <ChevronDown size={14} />
+              Show more ({totalRows - MAX_VISIBLE_ROWS} more rows)
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* Custom markdown components with collapsible tables */
+const markdownComponents: Partial<Components> = {
+  table: ({ children }) => <CollapsibleTable>{children}</CollapsibleTable>,
+};
 
 /* Framer-motion variants for message appearance */
 const messageVariants = {
@@ -513,6 +581,7 @@ export default function ChatPage() {
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               rehypePlugins={[rehypeHighlight]}
+                              components={markdownComponents}
                             >
                               {msg.content}
                             </ReactMarkdown>
