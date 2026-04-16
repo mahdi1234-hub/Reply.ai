@@ -116,6 +116,93 @@ body {
   font-weight: 600;
 }
 
+.markdown-body em {
+  font-style: italic;
+}
+
+/* Strikethrough */
+.markdown-body del {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+/* Task lists (checkboxes) */
+.markdown-body ul:has(input[type="checkbox"]) {
+  list-style-type: none;
+  padding-left: 0.25rem;
+}
+
+.markdown-body li:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.markdown-body input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.25rem;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  cursor: default;
+  position: relative;
+}
+
+.markdown-body input[type="checkbox"]:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.markdown-body input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 5px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Footnotes */
+.markdown-body .footnotes {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.markdown-body .footnotes ol {
+  padding-left: 1.25rem;
+}
+
+.markdown-body sup a {
+  color: #10b981;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.7rem;
+}
+
+.markdown-body sup a:hover {
+  text-decoration: underline;
+}
+
+/* Autolinks */
+.markdown-body a[href^="http"] {
+  color: #10b981;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.markdown-body a[href^="http"]:hover {
+  color: #059669;
+}
+
 /* Scrollbar styles */
 [data-radix-scroll-area-viewport] {
   scrollbar-width: thin;
