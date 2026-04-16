@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Paperclip, ArrowUp, MessageCircle, AtSign, Loader2 } from "lucide-react";
+import { Paperclip, ArrowUp, MessageCircle, AtSign, Loader2, LogOut } from "lucide-react";
 
 interface ChatHistory {
   id: string;
@@ -117,6 +117,11 @@ export default function Home() {
     return groups;
   };
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/auth");
+  };
+
   const suggestions = [
     "What can you do?",
     "What deals need attention?",
@@ -127,7 +132,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
-      <div className="w-full max-w-2xl px-4 pt-16 pb-8">
+      {/* Top bar with logout */}
+      <div className="w-full max-w-2xl px-4 pt-4 flex justify-end">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <LogOut size={14} />
+          <span>Sign out</span>
+        </button>
+      </div>
+      <div className="w-full max-w-2xl px-4 pt-8 pb-8">
         {/* Logo */}
         <div className="flex justify-center mb-4">
           <div className="relative w-16 h-16">
