@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUp, Paperclip, AtSign, User } from "lucide-react";
+import { ArrowLeft, ArrowUp, Paperclip, AtSign, User, FileText, X, Loader2 } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  fileName?: string;
 }
 
 interface ChatHistory {
@@ -27,7 +28,10 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; preview: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
@@ -155,6 +159,51 @@ export default function ChatPage() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      setUploadedFile({ name: file.name, preview: data.preview });
+
+      // Add a system message about the upload and ask AI about it
+      const uploadMsg: Message = {
+        role: "user",
+        content: `I've uploaded a file: "${file.name}" (${data.fileType}). Here's a preview: ${data.preview}\n\nPlease analyze this document and tell me what it contains.`,
+        fileName: file.name,
+      };
+      const newMessages = [...messages, uploadMsg];
+      setMessages(newMessages);
+      setUploadedFile(null);
+      sendMessage(newMessages);
+    } catch (error) {
+      console.error("Upload error:", error);
+      const errorMsg: Message = {
+        role: "assistant",
+        content: `Failed to upload file: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -216,6 +265,12 @@ export default function ChatPage() {
                     : "bg-gray-100 text-gray-800"
                 }`}
               >
+                {msg.fileName && (
+                  <div className="flex items-center gap-1.5 mb-1.5 text-xs opacity-80">
+                    <FileText size={12} />
+                    <span>{msg.fileName}</span>
+                  </div>
+                )}
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               </div>
               {msg.role === "user" && (
@@ -270,8 +325,20 @@ export default function ChatPage() {
                 <span>Add context</span>
               </button>
               <div className="flex items-center gap-2">
-                <button type="button" className="text-gray-400 hover:text-gray-600">
-                  <Paperclip size={18} />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.json,.xml,.jpg,.jpeg,.png,.gif,.webp,.bmp"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                >
+                  {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
                 </button>
                 <button
                   type="submit"
