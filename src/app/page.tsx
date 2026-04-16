@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Paperclip, ArrowUp, MessageCircle, AtSign, Loader2, LogOut } from "lucide-react";
+
+const NotificationInbox = dynamic(
+  () => import("@/components/notification-inbox"),
+  { ssr: false }
+);
 
 interface ChatHistory {
   id: string;
@@ -132,8 +138,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
-      {/* Top bar with logout */}
-      <div className="w-full max-w-2xl px-4 pt-4 flex justify-end">
+      {/* Top bar with notifications and logout */}
+      <div className="w-full max-w-2xl px-4 pt-4 flex justify-end items-center gap-3">
+        <NotificationInbox />
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"

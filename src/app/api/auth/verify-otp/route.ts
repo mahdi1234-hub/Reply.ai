@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createToken } from "@/lib/auth";
+import Knock from "@knocklabs/node";
+
+const knockClient = new Knock({
+  apiKey: process.env.KNOCK_API_KEY,
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,6 +49,16 @@ export async function POST(req: NextRequest) {
       where: { email: normalizedEmail },
       data: { verified: true },
     });
+
+    // Identify user in Knock for notifications
+    try {
+      await knockClient.users.update(user.id, {
+        email: user.email,
+        name: user.name || user.email,
+      });
+    } catch (knockErr) {
+      console.error("Knock identify error (non-blocking):", knockErr);
+    }
 
     // Create JWT token
     const token = await createToken(user.id, user.email);
