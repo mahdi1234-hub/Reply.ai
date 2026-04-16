@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
   KnockProvider,
   KnockFeedProvider,
 } from "@knocklabs/react";
 
 import "@knocklabs/react/dist/index.css";
+
+// Context to signal whether Knock providers are active
+const KnockReadyContext = createContext(false);
+
+export function useKnockReady() {
+  return useContext(KnockReadyContext);
+}
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -36,14 +43,20 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   const feedChannelId = process.env.NEXT_PUBLIC_KNOCK_FEED_CHANNEL_ID;
 
   if (!userId || !publicApiKey || !feedChannelId) {
-    return <>{children}</>;
+    return (
+      <KnockReadyContext.Provider value={false}>
+        {children}
+      </KnockReadyContext.Provider>
+    );
   }
 
   return (
-    <KnockProvider apiKey={publicApiKey} userId={userId}>
-      <KnockFeedProvider feedId={feedChannelId}>
-        {children}
-      </KnockFeedProvider>
-    </KnockProvider>
+    <KnockReadyContext.Provider value={true}>
+      <KnockProvider apiKey={publicApiKey} userId={userId}>
+        <KnockFeedProvider feedId={feedChannelId}>
+          {children}
+        </KnockFeedProvider>
+      </KnockProvider>
+    </KnockReadyContext.Provider>
   );
 }

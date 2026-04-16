@@ -1,43 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, Component, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Bell, X, Check, CheckCheck, Trash2 } from "lucide-react";
 import { useKnockFeed } from "@knocklabs/react";
 import { toast } from "sonner";
 import type { FeedItem } from "@knocklabs/client";
-
-// Error boundary to catch "useKnockFeed must be used within KnockFeedProvider"
-class KnockErrorBoundary extends Component<
-  { children: ReactNode; fallback: ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: ReactNode; fallback: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-    return this.props.children;
-  }
-}
-
-// Simple bell icon shown when Knock provider is not available
-function FallbackBell() {
-  return (
-    <div className="relative">
-      <button className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-full hover:bg-gray-100">
-        <Bell size={20} />
-      </button>
-    </div>
-  );
-}
+import { useKnockReady } from "./client-providers";
 
 function NotificationFeed() {
   const { feedClient, useFeedStore } = useKnockFeed();
@@ -250,11 +218,20 @@ function NotificationFeed() {
   );
 }
 
-// Export wrapper that catches errors when KnockFeedProvider is not available
+// Export wrapper that only renders the feed when Knock provider is ready
 export default function NotificationInbox() {
-  return (
-    <KnockErrorBoundary fallback={<FallbackBell />}>
-      <NotificationFeed />
-    </KnockErrorBoundary>
-  );
+  const knockReady = useKnockReady();
+
+  if (!knockReady) {
+    // Show plain bell icon while Knock provider is loading
+    return (
+      <div className="relative">
+        <button className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-full hover:bg-gray-100">
+          <Bell size={20} />
+        </button>
+      </div>
+    );
+  }
+
+  return <NotificationFeed />;
 }
